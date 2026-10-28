@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sales Insight Assistant — Presentation BI Dashboard</title>
+  
+  <!-- Modern Inter & JetBrains Mono Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- External Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ========================================================================
+       1. Top Header & Navigation
+       ======================================================================== -->
+  <header class="header">
+    <div class="header-inner">
+      <div class="brand-section">
+        <div class="brand-logo">SI</div>
+        <div class="brand-details">
+          <div class="brand-title">
+            Sales Insight Assistant
+            <span class="brand-badge">SQL + RAG</span>
+          </div>
+          <div class="brand-subtitle">Natural Language Business Intelligence &amp; Sales Analytics</div>
+        </div>
+      </div>
+
+      <div class="header-status-group">
+        <div class="status-badge">
+          <span class="pulse-dot"></span>
+          Dataset Connected
+        </div>
+        <div class="meta-pill" id="dataset-meta-badge">
+          51 Records &bull; 7 Products
+        </div>
+        <button type="button" id="btn-refresh" class="btn-refresh" title="Reload live data and reset filters">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="23 4 23 10 17 10"></polyline>
+            <polyline points="1 20 1 14 7 14"></polyline>
+            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+          </svg>
+          Refresh Data
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       Dashboard Main Workspace
+       ======================================================================== -->
+  <main class="dashboard-container">
+
+    <!-- 2. Four KPI Summary Cards -->
+    <section class="kpi-grid">
+      <!-- KPI 1: Net Revenue -->
+      <div class="glass-panel kpi-card teal">
+        <div class="kpi-header">
+          <span class="kpi-label">Total Net Revenue</span>
+          <div class="kpi-icon-box">&#8377;</div>
+        </div>
+        <div class="kpi-value" id="kpi-total-revenue">&#8377; &mdash;</div>
+        <div class="kpi-subtext" id="kpi-subtext-revenue">After discounts &bull; Completed sales</div>
+      </div>
+
+      <!-- KPI 2: Valid Transactions -->
+      <div class="glass-panel kpi-card purple">
+        <div class="kpi-header">
+          <span class="kpi-label">Completed Transactions</span>
+          <div class="kpi-icon-box">#</div>
+        </div>
+        <div class="kpi-value" id="kpi-valid-txns">&mdash;</div>
+        <div class="kpi-subtext" id="kpi-subtext-txns">50 valid &bull; 1 returned excluded</div>
+      </div>
+
+      <!-- KPI 3: Top Product -->
+      <div class="glass-panel kpi-card amber">
+        <div class="kpi-header">
+          <span class="kpi-label">Highest Revenue Product</span>
+          <div class="kpi-icon-box">&nearr;</div>
+        </div>
+        <div class="kpi-value" id="kpi-top-product">&mdash;</div>
+        <div class="kpi-subtext" id="kpi-top-product-sub">&#8377; &mdash;</div>
+      </div>
+
+      <!-- KPI 4: Top Region -->
+      <div class="glass-panel kpi-card blue">
+        <div class="kpi-header">
+          <span class="kpi-label">Highest Revenue Region</span>
+          <div class="kpi-icon-box">&diams;</div>
+        </div>
+        <div class="kpi-value" id="kpi-top-region">&mdash;</div>
+        <div class="kpi-subtext" id="kpi-top-region-sub">&#8377; &mdash;</div>
+      </div>
+    </section>
+
+    <!-- 3. Interactive Multi-Dimensional Filter Toolbar -->
+    <section class="glass-panel filter-bar">
+      <div class="filter-left">
+        <div class="filter-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+          </svg>
+          Filters:
+        </div>
+
+        <!-- Month Filter -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-month">Month</label>
+          <select id="filter-month" class="filter-select">
+            <option value="all">All Months</option>
+          </select>
+        </div>
+
+        <!-- Product Filter -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-product">Product</label>
+          <select id="filter-product" class="filter-select">
+            <option value="all">All Products</option>
+          </select>
+        </div>
+
+        <!-- Region Filter -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-region">Region</label>
+          <select id="filter-region" class="filter-select">
+            <option value="all">All Regions</option>
+          </select>
+        </div>
+
+        <!-- Sales Channel Filter -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-channel">Channel</label>
+          <select id="filter-channel" class="filter-select">
+            <option value="all">All Channels</option>
+          </select>
+        </div>
+
+        <!-- Transaction Status Filter -->
+        <div class="filter-group">
+          <label class="filter-label" for="filter-status">Status</label>
+          <select id="filter-status" class="filter-select">
+            <option value="all">All Statuses</option>
+            <option value="Completed" selected>Completed</option>
+            <option value="Returned">Returned</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="filter-actions">
+        <span class="active-filter-badge" id="active-filter-badge">&bull; Filter Active</span>
+        <button type="button" id="btn-clear-filters" class="btn-clear-filters">
+          &times; Reset Filters
+        </button>
+      </div>
+    </section>
+
+    <!-- 4. Natural Language Sales Assistant Card -->
+    <section class="glass-panel assistant-card">
+      <div class="assistant-header">
+        <div class="assistant-title-group">
+          <div class="assistant-icon">&#9889;</div>
+          <h2 class="assistant-title">Ask a Sales Question</h2>
+        </div>
+        <span class="assistant-badge">Deterministic Text-to-SQL + Vectorless RAG</span>
+      </div>
+
+      <form id="question-form" class="query-form">
+        <div class="query-input-group">
+          <input 
+            type="text" 
+            id="question-input" 
+            class="query-input" 
+            placeholder="Type your question (e.g. Which product generated the highest revenue?)" 
+            required 
+            autocomplete="off"
+          />
+          <button type="submit" id="ask-btn" class="btn-ask">
+            &#9889; Ask Question
+          </button>
+        </div>
+      </form>
+
+      <!-- Clickable Prompt Chips -->
+      <div class="prompt-chips-wrapper">
+        <span class="chips-label">Try Asking:</span>
+        <button type="button" class="chip-btn" data-q="What is the total revenue?">&#128176; Total revenue</button>
+        <button type="button" class="chip-btn" data-q="Which product generated the highest revenue?">&#127942; Top product</button>
+        <button type="button" class="chip-btn" data-q="Show the monthly revenue trend">&#128200; Monthly trend</button>
+        <button type="button" class="chip-btn" data-q="Which region generated the highest revenue?">&#127757; Top region</button>
+        <button type="button" class="chip-btn" data-q="Rank products by revenue">&#128202; Rank products</button>
+        <button type="button" class="chip-btn" data-q="Which sales channel performs best?">&#9889; Best channel</button>
+        <button type="button" class="chip-btn" data-q="How did revenue change between two months?">&#9878;&#65039; Jan vs Feb</button>
+      </div>
+
+      <!-- Loading State -->
+      <div id="loading-spinner" class="loading-box hidden">
+        <div class="spinner-glow"></div>
+        <span>Analyzing sales data and generating SQL query...</span>
+      </div>
+
+      <!-- Error Banner -->
+      <div id="error-card" class="error-banner hidden">
+        <span>&#9888;&#65039;</span>
+        <span id="error-message"></span>
+      </div>
+
+      <!-- Result Card -->
+      <div id="results-card" class="results-container hidden">
+        <!-- Plain-English Answer -->
+        <div class="answer-card">
+          <div class="answer-badge-row">
+            <span class="answer-badge">&#10003; Answer</span>
+            <span id="execution-mode" class="execution-mode">Deterministic SQL Engine</span>
+          </div>
+          <p id="answer-text" class="answer-text"></p>
+        </div>
+
+        <!-- Generated SQL Query -->
+        <div class="sql-container">
+          <div class="sql-header">
+            <span class="sql-title">Generated SQLite Query</span>
+            <button type="button" id="copy-sql-btn" class="btn-copy-sql">Copy SQL</button>
+          </div>
+          <pre><code id="sql-text"></code></pre>
+        </div>
+
+        <!-- Supporting Table -->
+        <div class="supporting-table-wrap">
+          <div class="supporting-table-title">Supporting Query Results</div>
+          <div class="supporting-table-scroll">
+            <table id="result-table">
+              <thead id="table-head"></thead>
+              <tbody id="table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Interactive 4-Chart Grid (2x2) -->
+    <section class="charts-grid-2x2">
+      <!-- Chart 1: Monthly Revenue Trend -->
+      <div class="glass-panel chart-card">
+        <div class="chart-header">
+          <div class="chart-title-group">
+            <span class="chart-dot teal"></span>
+            <h3 class="chart-title">Monthly Revenue Trend</h3>
+          </div>
+          <span class="chart-pill" id="trend-pill">Jan &ndash; Jun 2026</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="monthlyChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Product-wise Revenue -->
+      <div class="glass-panel chart-card">
+        <div class="chart-header">
+          <div class="chart-title-group">
+            <span class="chart-dot purple"></span>
+            <h3 class="chart-title">Product-wise Sales Revenue</h3>
+          </div>
+          <span class="chart-pill" id="product-pill">7 Products</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="productChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 3: Regional Sales Comparison -->
+      <div class="glass-panel chart-card">
+        <div class="chart-header">
+          <div class="chart-title-group">
+            <span class="chart-dot blue"></span>
+            <h3 class="chart-title">Regional Sales Comparison</h3>
+          </div>
+          <span class="chart-pill" id="region-pill">4 Regions</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="regionChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 4: Sales Channel Breakdown -->
+      <div class="glass-panel chart-card">
+        <div class="chart-header">
+          <div class="chart-title-group">
+            <span class="chart-dot amber"></span>
+            <h3 class="chart-title">Sales Channel Distribution</h3>
+          </div>
+          <span class="chart-pill" id="channel-pill">Online vs Retail</span>
+        </div>
+        <div class="chart-canvas-wrapper">
+          <canvas id="channelChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Searchable & Sortable Transaction Records Table -->
+    <section class="glass-panel table-card">
+      <div class="table-toolbar">
+        <div class="table-title-group">
+          <h3 class="table-title">Sales Transaction Records</h3>
+          <span class="table-subtitle" id="table-subtitle-count">Showing verified sales database entries</span>
+        </div>
+        <input 
+          type="text" 
+          id="table-search-input" 
+          class="table-search-input" 
+          placeholder="Search product, region, ID..." 
+          autocomplete="off"
+        />
+      </div>
+
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th data-col="transaction_id">Txn ID</th>
+              <th data-col="order_date">Date</th>
+              <th data-col="product">Product</th>
+              <th data-col="category">Category</th>
+              <th data-col="region">Region</th>
+              <th data-col="sales_channel">Channel</th>
+              <th data-col="quantity">Qty</th>
+              <th data-col="unit_price">Unit Price</th>
+              <th data-col="discount_amount">Discount</th>
+              <th data-col="revenue">Net Revenue</th>
+              <th data-col="status">Status</th>
+            </tr>
+          </thead>
+          <tbody id="transactions-table-body">
+            <!-- Dynamically populated rows -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="table-pagination-bar">
+        <div class="pagination-info" id="pagination-info">
+          Showing 1&ndash;10 of 50 records
+        </div>
+        <div class="pagination-controls">
+          <button type="button" id="btn-prev-page" class="btn-page">&larr; Previous</button>
+          <span class="pagination-info" id="page-num-display">Page 1 of 5</span>
+          <button type="button" id="btn-next-page" class="btn-page">Next &rarr;</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Data Quality & Reliability Audit Section -->
+    <section class="glass-panel quality-card">
+      <div class="quality-header">
+        <h3 class="quality-title">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Data Quality &amp; Hygiene Audit
+        </h3>
+        <span class="chart-pill">100% Data Integrity Verified</span>
+      </div>
+
+      <div class="quality-pills-row">
+        <div class="quality-stat-pill">
+          <span class="quality-stat-num teal" id="dq-total-source">51</span>
+          <span class="quality-stat-label">Total Raw Records</span>
+        </div>
+        <div class="quality-stat-pill">
+          <span class="quality-stat-num purple" id="dq-valid-completed">50</span>
+          <span class="quality-stat-label">Valid Completed Sales</span>
+        </div>
+        <div class="quality-stat-pill">
+          <span class="quality-stat-num rose" id="dq-flagged-returned">1</span>
+          <span class="quality-stat-label">Returned / Excluded</span>
+        </div>
+        <div class="quality-stat-pill">
+          <span class="quality-stat-num amber" id="dq-imputed">1</span>
+          <span class="quality-stat-label">Catalog Price Imputed</span>
+        </div>
+      </div>
+
+      <div class="audit-notes-box">
+        <strong>Business Rule &amp; Audit Trace:</strong>
+        Net Revenue = <code>(Quantity &times; Unit_Price) &minus; Discount_Amount</code>.
+        Returned transactions (e.g. <code>TXN0033</code>) are excluded from net revenue KPIs and analytical charts.
+        Missing unit price for <code>TXN0051 (Laptop Stand)</code> was cleanly imputed from known catalog entries (&#8377;1,200.00).
+        Zero quantity in <code>TXN0034</code> is handled cleanly with zero division prevention.
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       8. Footer
+       ======================================================================== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>Sales Insight Assistant &bull; Student Development Project &bull; Placement Assessment 2026</span>
+      <span>Built with Python &bull; Flask &bull; SQLite &bull; Pandas &bull; Chart.js</span>
+    </div>
+  </footer>
+
+  <!-- Frontend Logic -->
+  <script src="script.js"></script>
+</body>
+</html>
